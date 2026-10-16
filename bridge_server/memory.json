@@ -1,0 +1,42 @@
+{
+  "current_city": null,
+  "user_facts": {},
+  "reminders": [
+    {
+      "id": "afb55966",
+      "title": "Test hatirlatici",
+      "target_timestamp": 1792114248.7984831,
+      "target_time_str": "04:30",
+      "created_at": 1792114248.1984832,
+      "triggered": false,
+      "notified": false
+    },
+    {
+      "id": "520c9e4e",
+      "title": "Ogle Namazi Vakti",
+      "target_timestamp": 1792143540.0,
+      "target_time_str": "12:39",
+      "created_at": 1792114272.813287,
+      "triggered": false,
+      "notified": false
+    },
+    {
+      "id": "37754009",
+      "title": "Öğle Namazi Vakti",
+      "target_timestamp": 1792143540.0,
+      "target_time_str": "12:39",
+      "created_at": 1792114283.8730655,
+      "triggered": false,
+      "notified": false
+    },
+    {
+      "id": "7085c244",
+      "title": "Ogle Namazi Vakti",
+      "target_timestamp": 1792143540.0,
+      "target_time_str": "12:39",
+      "created_at": 1792114293.0370245,
+      "triggered": false,
+      "notified": false
+    }
+  ]
+}
