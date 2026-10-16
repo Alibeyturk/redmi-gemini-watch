@@ -283,9 +283,10 @@ async def get_active_reminders_api():
 
 @app.get("/", response_class=HTMLResponse)
 async def index():
+    api_key = os.getenv("GEMINI_API_KEY", "")
     api_status_badge = (
         '<span style="color:#22c55e;">● Gemini AI Aktif</span>'
-        if GEMINI_API_KEY
+        if api_key
         else '<span style="color:#ef4444;">● API Anahtarı Eksik (.env doldurun)</span>'
     )
     current_city_text = mm.get_current_city() or "Henüz Sorulmadı / Belirlenmedi"
@@ -738,9 +739,10 @@ async def index():
 
 @app.get("/api/health")
 async def health_check():
+    api_key = os.getenv("GEMINI_API_KEY", "")
     return {
         "status": "ok",
-        "has_api_key": bool(GEMINI_API_KEY),
+        "has_api_key": bool(api_key),
         "local_ip": LOCAL_IP,
         "port": SERVER_PORT,
     }
