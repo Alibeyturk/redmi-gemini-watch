@@ -53,18 +53,30 @@ LOCAL_IP = get_local_ip()
 SERVER_PORT = 8000
 
 # Gemini istemcisi
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
+from fastapi import FastAPI, UploadFile, File, Form, HTTPException, Request
 
+global_gemini_client = None
 
 def get_gemini_client():
-    if not GEMINI_API_KEY:
-        return None
-    try:
-        from google import genai
-        return genai.Client(api_key=GEMINI_API_KEY)
-    except Exception as e:
-        print(f"[UYARI] Google GenAI başlatılamadı: {e}")
-        return None
+    global global_gemini_client
+    if global_gemini_client is None:
+        api_key = os.getenv("GEMINI_API_KEY", "")
+        if not api_key:
+            return None
+        try:
+            from google import genai
+            global_gemini_client = genai.Client(api_key=api_key)
+        except Exception as e:
+            print(f"[UYARI] Google GenAI başlatılamadı: {e}")
+            return None
+    return global_gemini_client
+
+
+def get_base_url(request: Request) -> str:
+    """Render veya yerel ağdaki doğru HTTPS/HTTP adresini döner."""
+    proto = request.headers.get("x-forwarded-proto", request.url.scheme)
+    host = request.headers.get("x-forwarded-host", request.headers.get("host", f"{LOCAL_IP}:{SERVER_PORT}"))
+    return f"{proto}://{host}"
 
 
 # ==========================================
@@ -743,12 +755,14 @@ async def reset_chat():
 
 @app.post("/api/ask-text")
 async def ask_text(
+    request: Request,
     text: str = Form(...),
     voice: Optional[str] = Form(None),
     rate: Optional[str] = Form(None),
 ):
     """Canlı sohbet için çok turlu (hafızalı & araç destekli) metin API'si."""
-    if not GEMINI_API_KEY:
+    api_key = os.getenv("GEMINI_API_KEY", "")
+    if not api_key:
         return {"success": False, "error": "GEMINI_API_KEY tanımlanmamış."}
 
     try:
@@ -767,7 +781,8 @@ async def ask_text(
 
         # Akıcı Türkçe sese çevir
         tts_ok = await text_to_speech(reply_text, temp_output_path, voice=voice, rate=rate)
-        audio_url = f"http://{LOCAL_IP}:{SERVER_PORT}/static/reply_{audio_id}.mp3" if tts_ok else None
+        base_url = get_base_url(request)
+        audio_url = f"{base_url}/static/reply_{audio_id}.mp3" if tts_ok else None
 
         return {
             "success": True,
@@ -781,12 +796,14 @@ async def ask_text(
 
 @app.post("/api/ask-audio")
 async def ask_audio(
+    request: Request,
     file: UploadFile = File(...),
     voice: Optional[str] = None,
     rate: Optional[str] = None,
 ):
     """Saatten gelen ses dosyasını alır, hafızalı sohbete iletir ve sesli yanıt döner."""
-    if not GEMINI_API_KEY:
+    api_key = os.getenv("GEMINI_API_KEY", "")
+    if not api_key:
         return JSONResponse(
             status_code=400,
             content={"success": False, "error": "GEMINI_API_KEY eksik."},
@@ -815,7 +832,8 @@ async def ask_audio(
         print(f"[GEMINI SESLİ CEVAP]: {reply_text}")
 
         tts_ok = await text_to_speech(reply_text, temp_output_path, voice=voice, rate=rate)
-        audio_url = f"http://{LOCAL_IP}:{SERVER_PORT}/static/reply_{audio_id}.mp3" if tts_ok else None
+        base_url = get_base_url(request)
+        audio_url = f"{base_url}/static/reply_{audio_id}.mp3" if tts_ok else None
 
         return {
             "success": True,
